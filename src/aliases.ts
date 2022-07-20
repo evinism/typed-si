@@ -6,6 +6,8 @@ import {
   Unit,
   Composition,
   amperes,
+  scalar,
+  partialToFull,
 } from "./unit";
 
 export const alias = <C extends Composition>(
@@ -13,7 +15,10 @@ export const alias = <C extends Composition>(
   abbreviation?: string,
   multiplier: number = 1
 ): Unit<C> => {
-  return new Unit(unit.composition, unit.multiplier * multiplier, abbreviation);
+  return new Unit(unit.composition, {
+    multiplier: unit.multiplier * multiplier,
+    abbreviation,
+  });
 };
 
 // Quantity Aliases
@@ -84,17 +89,17 @@ export type Inductance = Quantity<{
 // SI Unit Aliases
 export const amps = amperes;
 export const hertz: Unit<Frequency> = alias(
-  seconds.per(seconds).per(seconds), // scorched earth policy for now
+  scalar.per(seconds), // scorched earth policy for now
   "Hz"
 );
 export const newtons: Unit<Force> = alias(
-  kilograms.times(meters).per(seconds).per(seconds),
+  kilograms.times(meters).per(seconds.squared()),
   "N",
   1
 );
 export const joules: Unit<Energy> = alias(newtons.times(meters), "J", 1);
 export const pascals: Unit<Pressure> = alias(
-  newtons.per(meters).per(meters),
+  newtons.per(meters.squared()),
   "Pa",
   1
 );
@@ -109,17 +114,13 @@ export const ohms: Unit<Impedance> = alias(volts.over(amperes), "Ω", 1);
 // Derived SI Units
 export const grams: Unit<Mass> = alias(kilograms, "g", 0.001);
 export const gs: Unit<Acceleration> = alias(
-  meters.per(seconds).per(seconds),
+  meters.per(seconds.squared()),
   "g",
   9.80665
 );
 export const aus: Unit<Length> = alias(meters, "au", 149597870700);
 export const angstroms: Unit<Length> = alias(meters, "Å", 1e-10);
-export const liters: Unit<Volume> = alias(
-  meters.times(meters).times(meters),
-  "l",
-  1e-3
-);
+export const liters: Unit<Volume> = alias(meters.cubed(), "l", 1e-3);
 
 // Time aliases
 export const minutes = alias(seconds, "min", 60);
@@ -134,5 +135,23 @@ export const poundsMass = alias(kilograms, "lbm", 0.45359237);
 export const feet = alias(meters, "ft", 0.3048);
 export const inches = alias(feet, "in", 12);
 export const yards = alias(feet, "yd", 3);
-
 export const footPounds = alias(joules, "ft⋅lbf", 1.3558179483314);
+
+// Temperature aliases
+export const celsius = new Unit<Temperature>(
+  partialToFull({ kelvin: 1 as const }),
+  {
+    multiplier: 1,
+    abbreviation: "°C",
+    offset: 273.15,
+  }
+);
+export const fahrenheit = new Unit<Temperature>(
+  partialToFull({ kelvin: 1 as const }),
+  {
+    multiplier: 5 / 9,
+    abbreviation: "°F",
+    offset: 255.372222222222,
+  }
+);
+

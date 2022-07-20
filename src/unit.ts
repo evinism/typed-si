@@ -39,7 +39,7 @@ type FromPartial<T extends Partial<Composition>> = {
 
 export type Quantity<T extends Partial<Composition>> = FromPartial<T>;
 
-const partialToFull = <T extends Partial<Composition>>(
+export const partialToFull = <T extends Partial<Composition>>(
   partial: T
 ): FromPartial<T> => {
   let composition: any = {};
@@ -64,11 +64,11 @@ export class Value<C extends Composition> {
   }
 
   static of<C extends Composition>(value: number, unit: Unit<C>): Value<C> {
-    return new Value(unit.composition, value * unit.multiplier);
+    return unit.value(value);
   }
 
   in(unit: Unit<C>): number {
-    return this.value * unit.multiplier;
+    return (this.value - unit.offset) / unit.multiplier;
   }
 
   toUnitString(unit: Unit<C>): string {
@@ -100,16 +100,39 @@ export class Value<C extends Composition> {
   minus(value: Value<C>): Value<C> {
     return subtract(this, value);
   }
+
+  squared(): Value<{
+    [key in BaseUnit]: Add<C[key], C[key]>;
+  }> {
+    return multiplyValue(this, this);
+  }
+
+  cubed(): Value<{
+    [key in BaseUnit]: Add<C[key], Add<C[key], C[key]>>;
+  }> {
+    return multiplyValue(this, this.squared());
+  }
+}
+
+interface UnitOptions {
+  abbreviation: string;
+  multiplier: number;
+  offset: number;
 }
 
 export class Unit<C extends Composition = Composition> {
   composition: C;
+  // SI = value * multiplier + offset
   multiplier: number;
+  // Might want to warn when multiplying units with non-zero offset
+  offset: number;
   abbreviation?: string;
 
-  constructor(composition: C, multiplier: number, abbreviation?: string) {
+  constructor(composition: C, options: Partial<UnitOptions> = {}) {
+    const { abbreviation, multiplier = 1, offset = 0 } = options;
     this.composition = composition;
     this.multiplier = multiplier;
+    this.offset = offset;
     this.abbreviation = abbreviation;
   }
 
@@ -118,7 +141,7 @@ export class Unit<C extends Composition = Composition> {
   }
 
   value(value: number): Value<C> {
-    return Value.of(value, this);
+    return new Value(this.composition, value * this.multiplier + this.offset);
   }
 
   per<C2 extends Composition>(
@@ -137,6 +160,18 @@ export class Unit<C extends Composition = Composition> {
     [key in BaseUnit]: Add<C[key], C2[key]>;
   }> {
     return multiplyUnit(this, value);
+  }
+
+  squared(): Unit<{
+    [key in BaseUnit]: Add<C[key], C[key]>;
+  }> {
+    return multiplyUnit(this, this);
+  }
+
+  cubed(): Unit<{
+    [key in BaseUnit]: Add<C[key], Add<C[key], C[key]>>;
+  }> {
+    return multiplyUnit(this, this.squared());
   }
 }
 
@@ -183,7 +218,9 @@ const multiplyUnit: MultiplyUnitFn = (a, b) => {
       candela: a.composition.candela + b.composition.candela,
       mol: a.composition.mol + b.composition.mol,
     },
-    a.multiplier * b.multiplier
+    {
+      multiplier: a.multiplier * b.multiplier,
+    }
   );
 };
 
@@ -224,7 +261,9 @@ export const divideUnit: DivideUnitFn = (a, b) => {
       kelvin: a.composition.kelvin - b.composition.kelvin,
       kg: a.composition.kg - b.composition.kg,
     },
-    a.multiplier / b.multiplier
+    {
+      multiplier: a.multiplier / b.multiplier,
+    }
   );
 };
 
@@ -250,9 +289,12 @@ const siAlias = <PC extends Partial<Composition>>(
   pc: PC,
   abbreviation: string
 ): Unit<FromPartial<PC>> => {
-  return new Unit(partialToFull(pc), 1, abbreviation) as any;
+  return new Unit(partialToFull(pc), {
+    abbreviation,
+  }) as any;
 };
 
+export const scalar = siAlias({}, "");
 export const meters = siAlias({ meter: 1 } as const, "m");
 export const seconds = siAlias({ second: 1 } as const, "s");
 export const kelvins = siAlias({ kelvin: 1 } as const, "K");
