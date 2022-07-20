@@ -1,5 +1,5 @@
 {
-  "name": "siunits",
+  "name": "typed-si",
   "version": "0.0.1",
   "description": "Typed physical quantities library",
   "main": "dist/umd/index.js",
@@ -21,7 +21,7 @@
     "test": "ts-mocha -p tsconfig.tests.json ./**/*.spec.ts ./**/**/*.spec.ts",
     "bundlesize": "npm run build && echo \"Bundle Size (bytes):\" $(gzip -c ./dist/umd/index.js | wc -c)",
     "prepare": "npm run build",
-    "repl": "npm run build && node --eval \"tq = require('./dist/umd/index.js');\" -i"
+    "repl": "npm run build && node --eval \"si = require('./dist/umd/index.js');\" -i"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^20.0.0",
