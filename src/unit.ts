@@ -1,3 +1,5 @@
+import { Add, Subtract } from "./num";
+
 // keep in sync.
 type BaseUnit =
   | "meter"
@@ -132,8 +134,6 @@ export class Quantity<C extends Composition> {
     return multiplyQuantity(this, this.squared());
   }
 }
-
-export const quant = Quantity.of;
 
 interface UnitOptions {
   abbreviation: string;
@@ -329,3 +329,5 @@ export const kilograms = siAlias({ kg: 1 } as const, "kg");
 export const amperes = siAlias({ ampere: 1 } as const, "A");
 export const candelas = siAlias({ candela: 1 } as const, "cd");
 export const moles = siAlias({ mol: 1 } as const, "mol");
+
+export const q = Quantity.of;

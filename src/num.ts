@@ -109,7 +109,6 @@ type InvMap = {
 
 type Succ<A extends number> = A extends keyof SuccMap ? SuccMap[A] : number;
 type Pred<A extends number> = A extends keyof PredMap ? PredMap[A] : number;
-type Invert<N extends number> = N extends keyof InvMap ? InvMap[N] : number;
 
 type AddPositiveSaturating<A extends number, B extends number> = A extends 0
   ? B
@@ -123,7 +122,7 @@ type AddNegativeSaturating<A extends number, B extends number> = A extends 0
   ? AddNegativeSaturating<Succ<A>, Pred<B>>
   : number;
 
-type Add<A extends number, B extends number> = A extends 0
+export type Add<A extends number, B extends number> = A extends 0
   ? B
   : B extends 0
   ? A
@@ -137,6 +136,7 @@ type Add<A extends number, B extends number> = A extends 0
   ? AddNegativeSaturating<A, B>
   : number;
 
-type Subtract<A extends number, B extends number> = Add<A, Invert<B>>;
-
-type Five = Add<4, Invert<4>>;
+export type Subtract<A extends number, B extends number> = Add<A, Invert<B>>;
+export type Invert<N extends number> = N extends keyof InvMap
+  ? InvMap[N]
+  : number;
