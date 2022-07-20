@@ -1,5 +1,5 @@
 {
-  "name": "typedquantities",
+  "name": "siunits",
   "version": "0.0.1",
   "description": "Typed physical quantities library",
   "main": "dist/umd/index.js",
