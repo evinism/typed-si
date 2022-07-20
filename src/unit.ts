@@ -1,6 +1,21 @@
 // keep in sync.
-type BaseUnit = "meter" | "second" | "kelvin" | "kg";
-const baseUnits: BaseUnit[] = ["meter", "second", "kelvin", "kg"];
+type BaseUnit =
+  | "meter"
+  | "second"
+  | "kelvin"
+  | "kg"
+  | "ampere"
+  | "candela"
+  | "mol";
+const baseUnits: BaseUnit[] = [
+  "meter",
+  "second",
+  "kelvin",
+  "kg",
+  "ampere",
+  "candela",
+  "mol",
+];
 
 // Composition and Composition aliases
 export type Composition = {
@@ -142,6 +157,9 @@ export const multiplyValue: MultiplyValueFn = (a, b) => {
       second: a.composition.second + b.composition.second,
       kelvin: a.composition.kelvin + b.composition.kelvin,
       kg: a.composition.kg + b.composition.kg,
+      ampere: a.composition.ampere + b.composition.ampere,
+      candela: a.composition.candela + b.composition.candela,
+      mol: a.composition.mol + b.composition.mol,
     },
     a.value * b.value
   );
@@ -161,6 +179,9 @@ const multiplyUnit: MultiplyUnitFn = (a, b) => {
       second: a.composition.second + b.composition.second,
       kelvin: a.composition.kelvin + b.composition.kelvin,
       kg: a.composition.kg + b.composition.kg,
+      ampere: a.composition.ampere + b.composition.ampere,
+      candela: a.composition.candela + b.composition.candela,
+      mol: a.composition.mol + b.composition.mol,
     },
     a.multiplier * b.multiplier
   );
@@ -180,6 +201,9 @@ export const divideValue: DivideValueFn = (a, b) => {
       second: a.composition.second - b.composition.second,
       kelvin: a.composition.kelvin - b.composition.kelvin,
       kg: a.composition.kg - b.composition.kg,
+      ampere: a.composition.ampere - b.composition.ampere,
+      candela: a.composition.candela - b.composition.candela,
+      mol: a.composition.mol - b.composition.mol,
     },
     a.value / b.value
   );
@@ -233,3 +257,6 @@ export const meters = siAlias({ meter: 1 } as const, "m");
 export const seconds = siAlias({ second: 1 } as const, "s");
 export const kelvins = siAlias({ kelvin: 1 } as const, "K");
 export const kilograms = siAlias({ kg: 1 } as const, "kg");
+export const amperes = siAlias({ ampere: 1 } as const, "A");
+export const candelas = siAlias({ candela: 1 } as const, "cd");
+export const moles = siAlias({ mol: 1 } as const, "mol");

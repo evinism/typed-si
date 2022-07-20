@@ -5,6 +5,7 @@ import {
   Quantity,
   Unit,
   Composition,
+  amperes,
 } from "./unit";
 
 export const alias = <C extends Composition>(
@@ -20,30 +21,105 @@ export type Scalar = Quantity<{}>;
 export type Area = Quantity<{ meter: 2 }>;
 export type Volume = Quantity<{ meter: 3 }>;
 export type Mass = Quantity<{ kg: 1 }>;
-export type Speed = Quantity<{ meter: 1; second: -1 }>;
+export type Length = Quantity<{ meter: 1 }>;
+export type Time = Quantity<{ second: 1 }>;
+export type Frequency = Quantity<{ second: -1 }>;
+export type Velocity = Quantity<{ meter: 1; second: -1 }>;
+export type Density = Quantity<{ kg: 1; meter: -3 }>;
+export type SurfaceDensity = Quantity<{ kg: 1; meter: -2 }>;
+export type SpecificEnergy = Quantity<{ joule: 1; kg: -1 }>;
+export type SpecificHeat = Quantity<{ joule: 1; kelvin: -1 }>;
 export type Acceleration = Quantity<{ meter: 1; second: -2 }>;
+export type Concentration = Quantity<{ mol: 1; meter: -3 }>;
+export type MassConcentration = Quantity<{ mol: 1; kg: -1 }>;
 export type Temperature = Quantity<{ kelvin: 1 }>;
 export type Pressure = Quantity<{ kg: 1; meter: -1; second: -2 }>;
 export type Force = Quantity<{ kg: 1; meter: 1; second: -2 }>;
 export type Energy = Quantity<{ kg: 1; meter: 2; second: -2 }>;
 export type Power = Quantity<{ kg: 1; meter: 2; second: -3 }>;
+export type Torque = Quantity<{ kg: 1; meter: 2; second: -2 }>;
+export type Charge = Quantity<{ ampere: 1; second: 1 }>;
+export type ElectricPotentialDelta = Quantity<{
+  kg: 1;
+  meter: 2;
+  second: -3;
+  ampere: -1;
+}>;
+export type Capacitance = Quantity<{
+  kg: 1;
+  meter: -2;
+  second: 4;
+  ampere: 2;
+}>;
+export type Impedance = Quantity<{
+  kg: 1;
+  meter: 2;
+  second: -3;
+  ampere: -2;
+}>;
+export type Conductance = Quantity<{
+  kg: -1;
+  meter: 2;
+  second: 3;
+  ampere: 2;
+}>;
+export type MagneticFlux = Quantity<{
+  kg: 1;
+  meter: 2;
+  second: -2;
+  ampere: -1;
+}>;
+export type MagneticFluxDensity = Quantity<{
+  kg: 1;
+  second: -2;
+  ampere: -1;
+}>;
+export type Inductance = Quantity<{
+  kg: 1;
+  meter: 2;
+  second: -2;
+  ampere: -2;
+}>;
 
 // SI Unit Aliases
+export const amps = amperes;
+export const hertz: Unit<Frequency> = alias(
+  seconds.per(seconds).per(seconds), // scorched earth policy for now
+  "Hz"
+);
 export const newtons: Unit<Force> = alias(
-  kilograms.times(meters).over(seconds).over(seconds),
+  kilograms.times(meters).per(seconds).per(seconds),
   "N",
   1
 );
 export const joules: Unit<Energy> = alias(newtons.times(meters), "J", 1);
 export const pascals: Unit<Pressure> = alias(
-  newtons.over(meters).over(meters),
+  newtons.per(meters).per(meters),
   "Pa",
   1
 );
 export const watts: Unit<Power> = alias(joules.over(seconds), "W", 1);
+export const coulombs: Unit<Charge> = alias(amperes.times(seconds), "C", 1);
+export const volts: Unit<ElectricPotentialDelta> = alias(
+  watts.over(amperes),
+  "v"
+);
+export const ohms: Unit<Impedance> = alias(volts.over(amperes), "Ω", 1);
 
 // Derived SI Units
-export const grams = alias(kilograms, "g", 0.001);
+export const grams: Unit<Mass> = alias(kilograms, "g", 0.001);
+export const gs: Unit<Acceleration> = alias(
+  meters.per(seconds).per(seconds),
+  "g",
+  9.80665
+);
+export const aus: Unit<Length> = alias(meters, "au", 149597870700);
+export const angstroms: Unit<Length> = alias(meters, "Å", 1e-10);
+export const liters: Unit<Volume> = alias(
+  meters.times(meters).times(meters),
+  "l",
+  1e-3
+);
 
 // Time aliases
 export const minutes = alias(seconds, "min", 60);
@@ -60,6 +136,3 @@ export const inches = alias(feet, "in", 12);
 export const yards = alias(feet, "yd", 3);
 
 export const footPounds = alias(joules, "ft⋅lbf", 1.3558179483314);
-
-// Common units
-export const gs = alias(meters.per(seconds).per(seconds), "g", 9.80665);
