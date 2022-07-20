@@ -7,6 +7,7 @@ type BaseUnit =
   | "ampere"
   | "candela"
   | "mol";
+
 const baseUnits: BaseUnit[] = [
   "meter",
   "second",
@@ -20,6 +21,15 @@ const baseUnits: BaseUnit[] = [
 // Composition and Composition aliases
 export type Composition = {
   [b in BaseUnit]: number;
+};
+
+const isSameDimensionality = (c1: Composition, c2: Composition): boolean => {
+  for (let unit of baseUnits) {
+    if (c1[unit] !== c2[unit]) {
+      return false;
+    }
+  }
+  return true;
 };
 
 const compositionToString = (c: Composition): string =>
@@ -37,7 +47,7 @@ type FromPartial<T extends Partial<Composition>> = {
   [K in BaseUnit]: T[K] extends number ? T[K] : 0;
 };
 
-export type Quantity<T extends Partial<Composition>> = FromPartial<T>;
+export type Dimensionality<T extends Partial<Composition>> = FromPartial<T>;
 
 export const partialToFull = <T extends Partial<Composition>>(
   partial: T
@@ -53,8 +63,8 @@ export const partialToFull = <T extends Partial<Composition>>(
   return composition;
 };
 
-// Value and Unit classes
-export class Value<C extends Composition> {
+// Quantity and Unit classes
+export class Quantity<C extends Composition> {
   composition: C;
   value: number;
 
@@ -63,11 +73,14 @@ export class Value<C extends Composition> {
     this.value = value;
   }
 
-  static of<C extends Composition>(value: number, unit: Unit<C>): Value<C> {
-    return unit.value(value);
+  static of<C extends Composition>(value: number, unit: Unit<C>): Quantity<C> {
+    return unit.quantity(value);
   }
 
   in(unit: Unit<C>): number {
+    if (!isSameDimensionality(this.composition, unit.composition)) {
+      throw new Error("Dimensionalities don't match!");
+    }
     return (this.value - unit.offset) / unit.multiplier;
   }
 
@@ -76,43 +89,51 @@ export class Value<C extends Composition> {
   }
 
   times<C2 extends Composition>(
-    value: Value<C2>
-  ): Value<{
+    value: Quantity<C2>
+  ): Quantity<{
     [key in BaseUnit]: Add<C[key], C2[key]>;
   }> {
-    return multiplyValue(this, value);
+    return multiplyQuantity(this, value);
   }
 
   per<C2 extends Composition>(
-    value: Value<C2>
-  ): Value<{
+    value: Quantity<C2>
+  ): Quantity<{
     [key in BaseUnit]: Subtract<C[key], C2[key]>;
   }> {
-    return divideValue(this, value);
+    return divideQuantity(this, value);
   }
 
   over = this.per;
 
-  plus(value: Value<C>): Value<C> {
+  plus(value: Quantity<C>): Quantity<C> {
+    if (!isSameDimensionality(this.composition, value.composition)) {
+      throw new Error("Dimensionalities don't match!");
+    }
     return add(this, value);
   }
 
-  minus(value: Value<C>): Value<C> {
+  minus(value: Quantity<C>): Quantity<C> {
+    if (!isSameDimensionality(this.composition, value.composition)) {
+      throw new Error("Dimensionalities don't match!");
+    }
     return subtract(this, value);
   }
 
-  squared(): Value<{
+  squared(): Quantity<{
     [key in BaseUnit]: Add<C[key], C[key]>;
   }> {
-    return multiplyValue(this, this);
+    return multiplyQuantity(this, this);
   }
 
-  cubed(): Value<{
+  cubed(): Quantity<{
     [key in BaseUnit]: Add<C[key], Add<C[key], C[key]>>;
   }> {
-    return multiplyValue(this, this.squared());
+    return multiplyQuantity(this, this.squared());
   }
 }
+
+export const quant = Quantity.of;
 
 interface UnitOptions {
   abbreviation: string;
@@ -140,8 +161,11 @@ export class Unit<C extends Composition = Composition> {
     return this.abbreviation || compositionToString(this.composition);
   }
 
-  value(value: number): Value<C> {
-    return new Value(this.composition, value * this.multiplier + this.offset);
+  quantity(value: number): Quantity<C> {
+    return new Quantity(
+      this.composition,
+      value * this.multiplier + this.offset
+    );
   }
 
   per<C2 extends Composition>(
@@ -178,15 +202,15 @@ export class Unit<C extends Composition = Composition> {
 // ---
 // Multiplication and division of units and values
 // ---
-type MultiplyValueFn = <C1 extends Composition, C2 extends Composition>(
-  a: Value<C1>,
-  b: Value<C2>
-) => Value<{
+type MultiplyQuantityFn = <C1 extends Composition, C2 extends Composition>(
+  a: Quantity<C1>,
+  b: Quantity<C2>
+) => Quantity<{
   [key in BaseUnit]: Add<C1[key], C2[key]>;
 }>;
 
-export const multiplyValue: MultiplyValueFn = (a, b) => {
-  return new Value<any>(
+export const multiplyQuantity: MultiplyQuantityFn = (a, b) => {
+  return new Quantity<any>(
     {
       meter: a.composition.meter + b.composition.meter,
       second: a.composition.second + b.composition.second,
@@ -224,15 +248,15 @@ const multiplyUnit: MultiplyUnitFn = (a, b) => {
   );
 };
 
-type DivideValueFn = <C1 extends Composition, C2 extends Composition>(
-  a: Value<C1>,
-  b: Value<C2>
-) => Value<{
+type DivideQuantityFn = <C1 extends Composition, C2 extends Composition>(
+  a: Quantity<C1>,
+  b: Quantity<C2>
+) => Quantity<{
   [key in BaseUnit]: Subtract<C1[key], C2[key]>;
 }>;
 
-export const divideValue: DivideValueFn = (a, b) => {
-  return new Value<any>(
+export const divideQuantity: DivideQuantityFn = (a, b) => {
+  return new Quantity<any>(
     {
       meter: a.composition.meter - b.composition.meter,
       second: a.composition.second - b.composition.second,
@@ -270,14 +294,17 @@ export const divideUnit: DivideUnitFn = (a, b) => {
 // ---
 // Addition and Subtraction
 // ---
-type BinFn = <C extends Composition>(a: Value<C>, b: Value<C>) => Value<C>;
+type BinFn = <C extends Composition>(
+  a: Quantity<C>,
+  b: Quantity<C>
+) => Quantity<C>;
 
 export const add: BinFn = (a, b) => {
-  return new Value(a.composition, a.value + b.value);
+  return new Quantity(a.composition, a.value + b.value);
 };
 
 export const subtract: BinFn = (a, b) => {
-  return new Value(a.composition, a.value - b.value);
+  return new Quantity(a.composition, a.value - b.value);
 };
 
 // ---

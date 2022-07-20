@@ -2,7 +2,7 @@ import {
   meters,
   seconds,
   kilograms,
-  Quantity,
+  Dimensionality,
   Unit,
   Composition,
   amperes,
@@ -21,65 +21,65 @@ export const alias = <C extends Composition>(
   });
 };
 
-// Quantity Aliases
-export type Scalar = Quantity<{}>;
-export type Area = Quantity<{ meter: 2 }>;
-export type Volume = Quantity<{ meter: 3 }>;
-export type Mass = Quantity<{ kg: 1 }>;
-export type Length = Quantity<{ meter: 1 }>;
-export type Time = Quantity<{ second: 1 }>;
-export type Frequency = Quantity<{ second: -1 }>;
-export type Velocity = Quantity<{ meter: 1; second: -1 }>;
-export type Density = Quantity<{ kg: 1; meter: -3 }>;
-export type SurfaceDensity = Quantity<{ kg: 1; meter: -2 }>;
-export type SpecificEnergy = Quantity<{ joule: 1; kg: -1 }>;
-export type SpecificHeat = Quantity<{ joule: 1; kelvin: -1 }>;
-export type Acceleration = Quantity<{ meter: 1; second: -2 }>;
-export type Concentration = Quantity<{ mol: 1; meter: -3 }>;
-export type MassConcentration = Quantity<{ mol: 1; kg: -1 }>;
-export type Temperature = Quantity<{ kelvin: 1 }>;
-export type Pressure = Quantity<{ kg: 1; meter: -1; second: -2 }>;
-export type Force = Quantity<{ kg: 1; meter: 1; second: -2 }>;
-export type Energy = Quantity<{ kg: 1; meter: 2; second: -2 }>;
-export type Power = Quantity<{ kg: 1; meter: 2; second: -3 }>;
-export type Torque = Quantity<{ kg: 1; meter: 2; second: -2 }>;
-export type Charge = Quantity<{ ampere: 1; second: 1 }>;
-export type ElectricPotentialDelta = Quantity<{
+// Dimensionality Aliases
+export type Scalar = Dimensionality<{}>;
+export type Area = Dimensionality<{ meter: 2 }>;
+export type Volume = Dimensionality<{ meter: 3 }>;
+export type Mass = Dimensionality<{ kg: 1 }>;
+export type Length = Dimensionality<{ meter: 1 }>;
+export type Time = Dimensionality<{ second: 1 }>;
+export type Frequency = Dimensionality<{ second: -1 }>;
+export type Velocity = Dimensionality<{ meter: 1; second: -1 }>;
+export type Density = Dimensionality<{ kg: 1; meter: -3 }>;
+export type SurfaceDensity = Dimensionality<{ kg: 1; meter: -2 }>;
+export type SpecificEnergy = Dimensionality<{ joule: 1; kg: -1 }>;
+export type SpecificHeat = Dimensionality<{ joule: 1; kelvin: -1 }>;
+export type Acceleration = Dimensionality<{ meter: 1; second: -2 }>;
+export type Concentration = Dimensionality<{ mol: 1; meter: -3 }>;
+export type MassConcentration = Dimensionality<{ mol: 1; kg: -1 }>;
+export type Temperature = Dimensionality<{ kelvin: 1 }>;
+export type Pressure = Dimensionality<{ kg: 1; meter: -1; second: -2 }>;
+export type Force = Dimensionality<{ kg: 1; meter: 1; second: -2 }>;
+export type Energy = Dimensionality<{ kg: 1; meter: 2; second: -2 }>;
+export type Power = Dimensionality<{ kg: 1; meter: 2; second: -3 }>;
+export type Torque = Dimensionality<{ kg: 1; meter: 2; second: -2 }>;
+export type Charge = Dimensionality<{ ampere: 1; second: 1 }>;
+export type ElectricPotentialDelta = Dimensionality<{
   kg: 1;
   meter: 2;
   second: -3;
   ampere: -1;
 }>;
-export type Capacitance = Quantity<{
+export type Capacitance = Dimensionality<{
   kg: 1;
   meter: -2;
   second: 4;
   ampere: 2;
 }>;
-export type Impedance = Quantity<{
+export type Impedance = Dimensionality<{
   kg: 1;
   meter: 2;
   second: -3;
   ampere: -2;
 }>;
-export type Conductance = Quantity<{
+export type Conductance = Dimensionality<{
   kg: -1;
   meter: 2;
   second: 3;
   ampere: 2;
 }>;
-export type MagneticFlux = Quantity<{
+export type MagneticFlux = Dimensionality<{
   kg: 1;
   meter: 2;
   second: -2;
   ampere: -1;
 }>;
-export type MagneticFluxDensity = Quantity<{
+export type MagneticFluxDensity = Dimensionality<{
   kg: 1;
   second: -2;
   ampere: -1;
 }>;
-export type Inductance = Quantity<{
+export type Inductance = Dimensionality<{
   kg: 1;
   meter: 2;
   second: -2;
