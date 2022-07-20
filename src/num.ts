@@ -123,11 +123,3 @@ type Add<A extends number, B extends number> =
   : number;
 
 type Subtract<A extends number, B extends number> = Add<A, Invert<B>>;
-
-type Z = Add<-2, 5>;
-
-
-
-
-
-  
