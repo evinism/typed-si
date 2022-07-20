@@ -121,6 +121,7 @@ export const gs: Unit<Acceleration> = alias(
 export const aus: Unit<Length> = alias(meters, "au", 149597870700);
 export const angstroms: Unit<Length> = alias(meters, "Å", 1e-10);
 export const liters: Unit<Volume> = alias(meters.cubed(), "l", 1e-3);
+export const atmospheres: Unit<Pressure> = alias(pascals, "atm", 101325);
 
 // Time aliases
 export const minutes = alias(seconds, "min", 60);
@@ -154,4 +155,3 @@ export const fahrenheit = new Unit<Temperature>(
     offset: 255.372222222222,
   }
 );
-
