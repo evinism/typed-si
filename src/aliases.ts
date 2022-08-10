@@ -159,19 +159,23 @@ export const days = alias(hours, "d", 24);
 export const day = days;
 export const weeks = alias(days, "w", 7);
 export const week = weeks;
+export const years = alias(days, "yr", 365.25);
+export const year = years;
 
 // Imperial units:
 export const pounds = alias(newtons, "lb", 0.224808943);
 export const pound = pounds;
 export const poundsForce = alias(pounds, "lbf");
 export const poundsMass = alias(kilograms, "lbm", 0.45359237);
-export const feet = alias(meters, "ft", 0.3048);
-export const foot = feet;
-export const inches = alias(feet, "in", 12);
+export const inches = alias(meter, "in", 0.0254); // Imperial / US crossover.
 export const inch = inches;
+export const feet = alias(inches, "ft", 12);
+export const foot = feet;
 export const yards = alias(feet, "yd", 3);
 export const yard = yards;
-export const footPounds = alias(joules, "ft⋅lbf", 1.3558179483314);
+export const miles = alias(feet, "mi", 5280);
+export const mile = miles;
+export const footPounds = alias(foot.times(poundsForce), "ft⋅lbf");
 export const footPound = footPounds;
 
 // Temperature aliases

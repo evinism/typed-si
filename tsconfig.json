@@ -6,6 +6,7 @@
     "outDir": "./dist/esm",
     "esModuleInterop": true,
     "types": [
+      "@types/mocha",
       "node"
     ],
     "moduleResolution": "node"
