@@ -42,3 +42,10 @@ export function sub(a: DualNumber, b: DualNumber): DualNumber {
   }
   return new Fraction(a).sub(new Fraction(b));
 }
+
+export function asNum(a: DualNumber): number {
+  if (typeof a === "number") {
+    return a;
+  }
+  return a.valueOf();
+}
