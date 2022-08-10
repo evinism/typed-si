@@ -102,7 +102,9 @@ export class Unit<C extends Composition = Composition> {
     return this.abbreviation || compositionToString(this._composition);
   }
 
-  quantity(value: DualNumber): Quantity<C> {
+  quantity(rawValue: DualNumber): Quantity<C> {
+    const value =
+      typeof rawValue === "number" ? new Fraction(rawValue) : rawValue;
     return new Quantity(
       this._composition,
       nadd(nmul(value, this._multiplier), this._offset)
