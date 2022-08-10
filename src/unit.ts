@@ -5,8 +5,10 @@ import {
   div as ndiv,
   add as nadd,
   sub as nsub,
+  asNum,
 } from "./dualNumber";
 import { Add, Subtract } from "./num";
+import { one, zero } from "./util";
 
 // keep in sync.
 type BaseUnit =
@@ -81,29 +83,29 @@ interface UnitOptions {
 }
 
 export class Unit<C extends Composition = Composition> {
-  composition: C;
+  readonly _composition: C;
   // SI = value * multiplier + offset
-  multiplier: DualNumber;
+  readonly _multiplier: DualNumber;
   // Might want to warn when multiplying units with non-zero offset
-  offset: DualNumber;
-  abbreviation?: string;
+  readonly _offset: DualNumber;
+  readonly abbreviation?: string;
 
   constructor(composition: C, options: Partial<UnitOptions> = {}) {
-    const { abbreviation, multiplier = 1, offset = 0 } = options;
-    this.composition = composition;
-    this.multiplier = new Fraction(multiplier);
-    this.offset = offset;
+    const { abbreviation, multiplier = one, offset = zero } = options;
+    this._composition = composition;
+    this._multiplier = multiplier;
+    this._offset = offset;
     this.abbreviation = abbreviation;
   }
 
   toString() {
-    return this.abbreviation || compositionToString(this.composition);
+    return this.abbreviation || compositionToString(this._composition);
   }
 
   quantity(value: DualNumber): Quantity<C> {
     return new Quantity(
-      this.composition,
-      nadd(nmul(value, this.multiplier), this.offset)
+      this._composition,
+      nadd(nmul(value, this._multiplier), this._offset)
     );
   }
 
@@ -114,8 +116,6 @@ export class Unit<C extends Composition = Composition> {
   }> {
     return divideUnit(this, unit);
   }
-
-  over = this.per;
 
   times<C2 extends Composition>(
     value: Unit<C2>
@@ -136,15 +136,19 @@ export class Unit<C extends Composition = Composition> {
   }> {
     return multiplyUnit(this, this.squared());
   }
+
+  mul = this.times;
+  div = this.per;
+  over = this.per;
 }
 
 export class Quantity<C extends Composition> {
-  composition: C;
-  value: DualNumber;
+  readonly _composition: C;
+  readonly _value: DualNumber;
 
   constructor(composition: C, value: DualNumber) {
-    this.composition = composition;
-    this.value = value;
+    this._composition = composition;
+    this._value = value;
   }
 
   static of<C extends Composition>(
@@ -155,14 +159,14 @@ export class Quantity<C extends Composition> {
   }
 
   in(unit: Unit<C>): number {
-    if (!isSameDimensionality(this.composition, unit.composition)) {
+    if (!isSameDimensionality(this._composition, unit._composition)) {
       throw new Error("Dimensionalities don't match!");
     }
-    return ndiv(nsub(this.value, unit.offset), unit.multiplier).valueOf();
+    return ndiv(nsub(this._value, unit._offset), unit._multiplier).valueOf();
   }
 
   toUnitString(unit: Unit<C>): string {
-    return `${this.value}${unit.toString()}`;
+    return `${asNum(this._value)}${unit.toString()}`;
   }
 
   times<C2 extends Composition>(
@@ -181,17 +185,15 @@ export class Quantity<C extends Composition> {
     return divideQuantity(this, value);
   }
 
-  over = this.per;
-
   plus(value: Quantity<C>): Quantity<C> {
-    if (!isSameDimensionality(this.composition, value.composition)) {
+    if (!isSameDimensionality(this._composition, value._composition)) {
       throw new Error("Dimensionalities don't match!");
     }
     return add(this, value);
   }
 
   minus(value: Quantity<C>): Quantity<C> {
-    if (!isSameDimensionality(this.composition, value.composition)) {
+    if (!isSameDimensionality(this._composition, value._composition)) {
       throw new Error("Dimensionalities don't match!");
     }
     return subtract(this, value);
@@ -208,6 +210,12 @@ export class Quantity<C extends Composition> {
   }> {
     return multiplyQuantity(this, this.squared());
   }
+
+  add = this.plus;
+  sub = this.minus;
+  mul = this.times;
+  div = this.per;
+  over = this.per;
 }
 
 // ---
@@ -223,15 +231,15 @@ type MultiplyQuantityFn = <C1 extends Composition, C2 extends Composition>(
 export const multiplyQuantity: MultiplyQuantityFn = (a, b) => {
   return new Quantity<any>(
     {
-      meter: a.composition.meter + b.composition.meter,
-      second: a.composition.second + b.composition.second,
-      kelvin: a.composition.kelvin + b.composition.kelvin,
-      kg: a.composition.kg + b.composition.kg,
-      ampere: a.composition.ampere + b.composition.ampere,
-      candela: a.composition.candela + b.composition.candela,
-      mol: a.composition.mol + b.composition.mol,
+      meter: a._composition.meter + b._composition.meter,
+      second: a._composition.second + b._composition.second,
+      kelvin: a._composition.kelvin + b._composition.kelvin,
+      kg: a._composition.kg + b._composition.kg,
+      ampere: a._composition.ampere + b._composition.ampere,
+      candela: a._composition.candela + b._composition.candela,
+      mol: a._composition.mol + b._composition.mol,
     },
-    nmul(a.value, b.value)
+    nmul(a._value, b._value)
   );
 };
 
@@ -245,16 +253,16 @@ type MultiplyUnitFn = <C1 extends Composition, C2 extends Composition>(
 const multiplyUnit: MultiplyUnitFn = (a, b) => {
   return new Unit<any>(
     {
-      meter: a.composition.meter + b.composition.meter,
-      second: a.composition.second + b.composition.second,
-      kelvin: a.composition.kelvin + b.composition.kelvin,
-      kg: a.composition.kg + b.composition.kg,
-      ampere: a.composition.ampere + b.composition.ampere,
-      candela: a.composition.candela + b.composition.candela,
-      mol: a.composition.mol + b.composition.mol,
+      meter: a._composition.meter + b._composition.meter,
+      second: a._composition.second + b._composition.second,
+      kelvin: a._composition.kelvin + b._composition.kelvin,
+      kg: a._composition.kg + b._composition.kg,
+      ampere: a._composition.ampere + b._composition.ampere,
+      candela: a._composition.candela + b._composition.candela,
+      mol: a._composition.mol + b._composition.mol,
     },
     {
-      multiplier: nmul(a.multiplier, b.multiplier),
+      multiplier: nmul(a._multiplier, b._multiplier),
     }
   );
 };
@@ -269,15 +277,15 @@ type DivideQuantityFn = <C1 extends Composition, C2 extends Composition>(
 export const divideQuantity: DivideQuantityFn = (a, b) => {
   return new Quantity<any>(
     {
-      meter: a.composition.meter - b.composition.meter,
-      second: a.composition.second - b.composition.second,
-      kelvin: a.composition.kelvin - b.composition.kelvin,
-      kg: a.composition.kg - b.composition.kg,
-      ampere: a.composition.ampere - b.composition.ampere,
-      candela: a.composition.candela - b.composition.candela,
-      mol: a.composition.mol - b.composition.mol,
+      meter: a._composition.meter - b._composition.meter,
+      second: a._composition.second - b._composition.second,
+      kelvin: a._composition.kelvin - b._composition.kelvin,
+      kg: a._composition.kg - b._composition.kg,
+      ampere: a._composition.ampere - b._composition.ampere,
+      candela: a._composition.candela - b._composition.candela,
+      mol: a._composition.mol - b._composition.mol,
     },
-    ndiv(a.value, b.value)
+    ndiv(a._value, b._value)
   );
 };
 
@@ -291,13 +299,16 @@ type DivideUnitFn = <C1 extends Composition, C2 extends Composition>(
 export const divideUnit: DivideUnitFn = (a, b) => {
   return new Unit<any>(
     {
-      meter: a.composition.meter - b.composition.meter,
-      second: a.composition.second - b.composition.second,
-      kelvin: a.composition.kelvin - b.composition.kelvin,
-      kg: a.composition.kg - b.composition.kg,
+      meter: a._composition.meter - b._composition.meter,
+      second: a._composition.second - b._composition.second,
+      kelvin: a._composition.kelvin - b._composition.kelvin,
+      kg: a._composition.kg - b._composition.kg,
+      ampere: a._composition.ampere - b._composition.ampere,
+      candela: a._composition.candela - b._composition.candela,
+      mol: a._composition.mol - b._composition.mol,
     },
     {
-      multiplier: ndiv(a.multiplier, b.multiplier),
+      multiplier: ndiv(a._multiplier, b._multiplier),
     }
   );
 };
@@ -311,11 +322,11 @@ type BinFn = <C extends Composition>(
 ) => Quantity<C>;
 
 export const add: BinFn = (a, b) => {
-  return new Quantity(a.composition, nadd(a.value, b.value));
+  return new Quantity(a._composition, nadd(a._value, b._value));
 };
 
 export const subtract: BinFn = (a, b) => {
-  return new Quantity(a.composition, nsub(a.value, b.value));
+  return new Quantity(a._composition, nsub(a._value, b._value));
 };
 
 // ---

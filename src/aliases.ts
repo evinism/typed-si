@@ -14,19 +14,18 @@ import {
   moles,
   candelas,
 } from "./unit";
+import { f, one } from "./util";
 
 export const alias = <C extends Composition>(
   unit: Unit<C>,
   abbreviation?: string,
-  multiplier: DualNumber = 1
+  multiplier: DualNumber = one
 ): Unit<C> => {
-  return new Unit(unit.composition, {
-    multiplier: mul(unit.multiplier, multiplier),
+  return new Unit(unit._composition, {
+    multiplier: mul(unit._multiplier, multiplier),
     abbreviation,
   });
 };
-
-const f = (num: number, den: number) => new Fraction(num, den);
 
 // Dimensionality Aliases
 export type Scalar = Dimensionality<{}>;
@@ -115,7 +114,7 @@ export const newtons: Unit<Force> = alias(
   1
 );
 export const newton = newtons;
-export const joules: Unit<Energy> = alias(newtons.times(meters), "J", 1);
+export const joules: Unit<Energy> = alias(newtons.times(meters), "J");
 export const joule = joules;
 export const pascals: Unit<Pressure> = alias(
   newtons.per(meters.squared()),
@@ -123,20 +122,20 @@ export const pascals: Unit<Pressure> = alias(
   1
 );
 export const pascal = pascals;
-export const watts: Unit<Power> = alias(joules.over(seconds), "W", 1);
+export const watts: Unit<Power> = alias(joules.over(seconds), "W");
 export const watt = watts;
-export const coulombs: Unit<Charge> = alias(amperes.times(seconds), "C", 1);
+export const coulombs: Unit<Charge> = alias(amperes.times(seconds), "C");
 export const coulomb = coulombs;
 export const volts: Unit<ElectricPotentialDelta> = alias(
   watts.over(amperes),
   "v"
 );
 export const volt = volts;
-export const ohms: Unit<Impedance> = alias(volts.over(amperes), "Ω", 1);
+export const ohms: Unit<Impedance> = alias(volts.over(amperes), "Ω");
 export const ohm = ohms;
 
 // Derived SI Units
-export const grams: Unit<Mass> = alias(kilograms, "g", 0.001);
+export const grams: Unit<Mass> = alias(kilograms, "g", f(1, 1000));
 export const gram = grams;
 export const gs: Unit<Acceleration> = alias(
   meters.per(seconds.squared()),
@@ -190,7 +189,7 @@ export const footPound = footPounds;
 export const celsius = new Unit<Temperature>(
   partialToFull({ kelvin: 1 as const }),
   {
-    multiplier: f(1, 1),
+    multiplier: one,
     abbreviation: "°C",
     offset: f(27315, 100),
   }
