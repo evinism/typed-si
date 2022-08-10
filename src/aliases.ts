@@ -1,3 +1,5 @@
+import Fraction from "fraction.js";
+import { DualNumber, mul } from "./dualNumber";
 import {
   meters,
   seconds,
@@ -16,13 +18,15 @@ import {
 export const alias = <C extends Composition>(
   unit: Unit<C>,
   abbreviation?: string,
-  multiplier: number = 1
+  multiplier: DualNumber = 1
 ): Unit<C> => {
   return new Unit(unit.composition, {
-    multiplier: unit.multiplier * multiplier,
+    multiplier: mul(unit.multiplier, multiplier),
     abbreviation,
   });
 };
+
+const f = (num: number, den: number) => new Fraction(num, den);
 
 // Dimensionality Aliases
 export type Scalar = Dimensionality<{}>;
@@ -137,43 +141,47 @@ export const gram = grams;
 export const gs: Unit<Acceleration> = alias(
   meters.per(seconds.squared()),
   "g",
-  9.80665
+  f(980665, 100000)
 );
 export const g = gs;
-export const aus: Unit<Length> = alias(meters, "au", 149597870700);
+export const aus: Unit<Length> = alias(
+  meters,
+  "au",
+  new Fraction(149597870700, 1)
+);
 export const au = aus;
-export const angstroms: Unit<Length> = alias(meters, "Å", 1e-10);
+export const angstroms: Unit<Length> = alias(meters, "Å", f(1, 1e10));
 export const angstrom = angstroms;
-export const liters: Unit<Volume> = alias(meters.cubed(), "l", 1e-3);
+export const liters: Unit<Volume> = alias(meters.cubed(), "l", f(1, 1e3));
 export const liter = liters;
-export const atmospheres: Unit<Pressure> = alias(pascals, "atm", 101325);
+export const atmospheres: Unit<Pressure> = alias(pascals, "atm", f(101325, 1));
 export const atmosphere = atmospheres;
 export const atm = atmospheres;
 
 // Time aliases
-export const minutes = alias(seconds, "min", 60);
+export const minutes = alias(seconds, "min", f(60, 1));
 export const minute = minutes;
-export const hours = alias(minutes, "h", 60);
+export const hours = alias(minutes, "h", f(60, 1));
 export const hour = hours;
-export const days = alias(hours, "d", 24);
+export const days = alias(hours, "d", f(24, 1));
 export const day = days;
-export const weeks = alias(days, "w", 7);
+export const weeks = alias(days, "w", f(7, 1));
 export const week = weeks;
-export const years = alias(days, "yr", 365.25);
+export const years = alias(days, "yr", f(1461, 4));
 export const year = years;
 
 // Imperial units:
-export const pounds = alias(newtons, "lb", 0.224808943);
+export const pounds = alias(newtons, "lb", f(224808943, 1000000000));
 export const pound = pounds;
 export const poundsForce = alias(pounds, "lbf");
-export const poundsMass = alias(kilograms, "lbm", 0.45359237);
-export const inches = alias(meter, "in", 0.0254); // Imperial / US crossover.
+export const poundsMass = alias(kilograms, "lbm", f(45359237, 100000000));
+export const inches = alias(meter, "in", f(254, 10000)); // Imperial / US crossover.
 export const inch = inches;
-export const feet = alias(inches, "ft", 12);
+export const feet = alias(inches, "ft", f(12, 1));
 export const foot = feet;
-export const yards = alias(feet, "yd", 3);
+export const yards = alias(feet, "yd", f(3, 1));
 export const yard = yards;
-export const miles = alias(feet, "mi", 5280);
+export const miles = alias(feet, "mi", f(5280, 1));
 export const mile = miles;
 export const footPounds = alias(foot.times(poundsForce), "ft⋅lbf");
 export const footPound = footPounds;
@@ -182,16 +190,16 @@ export const footPound = footPounds;
 export const celsius = new Unit<Temperature>(
   partialToFull({ kelvin: 1 as const }),
   {
-    multiplier: 1,
+    multiplier: f(1, 1),
     abbreviation: "°C",
-    offset: 273.15,
+    offset: f(27315, 100),
   }
 );
 export const fahrenheit = new Unit<Temperature>(
   partialToFull({ kelvin: 1 as const }),
   {
-    multiplier: 5 / 9,
+    multiplier: f(5, 9),
     abbreviation: "°F",
-    offset: 255.372222222222,
+    offset: f(45967, 180),
   }
 );

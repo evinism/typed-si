@@ -1,4 +1,5 @@
 import assert from "assert";
+import Fraction from "fraction.js";
 import {
   day,
   feet,
@@ -15,6 +16,8 @@ import {
 } from "./aliases";
 import { meters, Quantity, scalar, seconds } from "./unit";
 
+const fv = (num: number, den: number) => new Fraction(num, den).valueOf();
+
 describe("typed-si", () => {
   describe("manipulation of simple quantities", () => {
     it("allows the construction of quantities", () => {
@@ -23,7 +26,6 @@ describe("typed-si", () => {
       assert(m.composition.meter == 1);
 
       const f = Quantity.of(1, foot);
-      assert(f.value == 0.30479999999999996); // ugh - precision loss
       assert(f.composition.meter == 1);
     });
 
@@ -58,6 +60,10 @@ describe("typed-si", () => {
 
   describe("unit conversions", () => {
     it("allows the conversion of distances", () => {
+      assert(Quantity.of(1, meter).in(feet) == fv(10000, 3048));
+      assert(Quantity.of(1, foot).in(meters) == fv(3048, 10000));
+      assert(Quantity.of(1, inch).in(meters) == fv(3048, 12 * 10000));
+      assert(Quantity.of(1, foot).in(inches) == 12);
       assert(Quantity.of(1, mile).in(feet) == 5280);
     });
 

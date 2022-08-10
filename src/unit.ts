@@ -1,3 +1,11 @@
+import Fraction from "fraction.js";
+import {
+  DualNumber,
+  mul as nmul,
+  div as ndiv,
+  add as nadd,
+  sub as nsub,
+} from "./dualNumber";
 import { Add, Subtract } from "./num";
 
 // keep in sync.
@@ -65,17 +73,84 @@ export const partialToFull = <T extends Partial<Composition>>(
   return composition;
 };
 
-// Quantity and Unit classes
+// Unit and Quantity classes
+interface UnitOptions {
+  abbreviation: string;
+  multiplier: DualNumber;
+  offset: DualNumber;
+}
+
+export class Unit<C extends Composition = Composition> {
+  composition: C;
+  // SI = value * multiplier + offset
+  multiplier: DualNumber;
+  // Might want to warn when multiplying units with non-zero offset
+  offset: DualNumber;
+  abbreviation?: string;
+
+  constructor(composition: C, options: Partial<UnitOptions> = {}) {
+    const { abbreviation, multiplier = 1, offset = 0 } = options;
+    this.composition = composition;
+    this.multiplier = new Fraction(multiplier);
+    this.offset = offset;
+    this.abbreviation = abbreviation;
+  }
+
+  toString() {
+    return this.abbreviation || compositionToString(this.composition);
+  }
+
+  quantity(value: DualNumber): Quantity<C> {
+    return new Quantity(
+      this.composition,
+      nadd(nmul(value, this.multiplier), this.offset)
+    );
+  }
+
+  per<C2 extends Composition>(
+    unit: Unit<C2>
+  ): Unit<{
+    [key in BaseUnit]: Subtract<C[key], C2[key]>;
+  }> {
+    return divideUnit(this, unit);
+  }
+
+  over = this.per;
+
+  times<C2 extends Composition>(
+    value: Unit<C2>
+  ): Unit<{
+    [key in BaseUnit]: Add<C[key], C2[key]>;
+  }> {
+    return multiplyUnit(this, value);
+  }
+
+  squared(): Unit<{
+    [key in BaseUnit]: Add<C[key], C[key]>;
+  }> {
+    return multiplyUnit(this, this);
+  }
+
+  cubed(): Unit<{
+    [key in BaseUnit]: Add<C[key], Add<C[key], C[key]>>;
+  }> {
+    return multiplyUnit(this, this.squared());
+  }
+}
+
 export class Quantity<C extends Composition> {
   composition: C;
-  value: number;
+  value: DualNumber;
 
-  constructor(composition: C, value: number) {
+  constructor(composition: C, value: DualNumber) {
     this.composition = composition;
     this.value = value;
   }
 
-  static of<C extends Composition>(value: number, unit: Unit<C>): Quantity<C> {
+  static of<C extends Composition>(
+    value: DualNumber,
+    unit: Unit<C>
+  ): Quantity<C> {
     return unit.quantity(value);
   }
 
@@ -83,7 +158,7 @@ export class Quantity<C extends Composition> {
     if (!isSameDimensionality(this.composition, unit.composition)) {
       throw new Error("Dimensionalities don't match!");
     }
-    return (this.value - unit.offset) / unit.multiplier;
+    return ndiv(nsub(this.value, unit.offset), unit.multiplier).valueOf();
   }
 
   toUnitString(unit: Unit<C>): string {
@@ -135,70 +210,6 @@ export class Quantity<C extends Composition> {
   }
 }
 
-interface UnitOptions {
-  abbreviation: string;
-  multiplier: number;
-  offset: number;
-}
-
-export class Unit<C extends Composition = Composition> {
-  composition: C;
-  // SI = value * multiplier + offset
-  multiplier: number;
-  // Might want to warn when multiplying units with non-zero offset
-  offset: number;
-  abbreviation?: string;
-
-  constructor(composition: C, options: Partial<UnitOptions> = {}) {
-    const { abbreviation, multiplier = 1, offset = 0 } = options;
-    this.composition = composition;
-    this.multiplier = multiplier;
-    this.offset = offset;
-    this.abbreviation = abbreviation;
-  }
-
-  toString() {
-    return this.abbreviation || compositionToString(this.composition);
-  }
-
-  quantity(value: number): Quantity<C> {
-    return new Quantity(
-      this.composition,
-      value * this.multiplier + this.offset
-    );
-  }
-
-  per<C2 extends Composition>(
-    unit: Unit<C2>
-  ): Unit<{
-    [key in BaseUnit]: Subtract<C[key], C2[key]>;
-  }> {
-    return divideUnit(this, unit);
-  }
-
-  over = this.per;
-
-  times<C2 extends Composition>(
-    value: Unit<C2>
-  ): Unit<{
-    [key in BaseUnit]: Add<C[key], C2[key]>;
-  }> {
-    return multiplyUnit(this, value);
-  }
-
-  squared(): Unit<{
-    [key in BaseUnit]: Add<C[key], C[key]>;
-  }> {
-    return multiplyUnit(this, this);
-  }
-
-  cubed(): Unit<{
-    [key in BaseUnit]: Add<C[key], Add<C[key], C[key]>>;
-  }> {
-    return multiplyUnit(this, this.squared());
-  }
-}
-
 // ---
 // Multiplication and division of units and values
 // ---
@@ -220,7 +231,7 @@ export const multiplyQuantity: MultiplyQuantityFn = (a, b) => {
       candela: a.composition.candela + b.composition.candela,
       mol: a.composition.mol + b.composition.mol,
     },
-    a.value * b.value
+    nmul(a.value, b.value)
   );
 };
 
@@ -243,7 +254,7 @@ const multiplyUnit: MultiplyUnitFn = (a, b) => {
       mol: a.composition.mol + b.composition.mol,
     },
     {
-      multiplier: a.multiplier * b.multiplier,
+      multiplier: nmul(a.multiplier, b.multiplier),
     }
   );
 };
@@ -266,7 +277,7 @@ export const divideQuantity: DivideQuantityFn = (a, b) => {
       candela: a.composition.candela - b.composition.candela,
       mol: a.composition.mol - b.composition.mol,
     },
-    a.value / b.value
+    ndiv(a.value, b.value)
   );
 };
 
@@ -286,7 +297,7 @@ export const divideUnit: DivideUnitFn = (a, b) => {
       kg: a.composition.kg - b.composition.kg,
     },
     {
-      multiplier: a.multiplier / b.multiplier,
+      multiplier: ndiv(a.multiplier, b.multiplier),
     }
   );
 };
@@ -300,11 +311,11 @@ type BinFn = <C extends Composition>(
 ) => Quantity<C>;
 
 export const add: BinFn = (a, b) => {
-  return new Quantity(a.composition, a.value + b.value);
+  return new Quantity(a.composition, nadd(a.value, b.value));
 };
 
 export const subtract: BinFn = (a, b) => {
-  return new Quantity(a.composition, a.value - b.value);
+  return new Quantity(a.composition, nsub(a.value, b.value));
 };
 
 // ---
